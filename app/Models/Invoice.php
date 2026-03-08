@@ -14,6 +14,8 @@ class Invoice extends Model
         'invoice_id',
         'property_id',
         'unit_id',
+        'currency_code',
+        'exchange_rate',
         'invoice_month',
         'end_date',
         'status',

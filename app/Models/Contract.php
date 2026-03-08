@@ -8,4 +8,24 @@ use Illuminate\Database\Eloquent\Model;
 class Contract extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'tenant_id',
+        'lease_start_date',
+        'lease_end_date',
+        'lease_tenure',
+        'amount',
+        'amount_paid',
+        'amount_remained',
+        'lease_terms',
+        'lease_rate',
+        'increments',
+        'payment_cycle',
+        'penalty',
+        'discount',
+        'contract_status',
+        'status',
+        'payment_date',
+    ];
 }

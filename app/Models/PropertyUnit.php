@@ -10,6 +10,10 @@ class PropertyUnit extends Model
     use HasFactory;
     protected $fillable = [
         'name',
+        'size_sqm',
+        'status',
+        'last_maintenance_date',
+        'next_maintenance_date',
         'bedroom',
         'property_id',
         'baths',
