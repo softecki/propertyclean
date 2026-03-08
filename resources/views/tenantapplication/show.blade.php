@@ -13,7 +13,7 @@
             <a href="{{route('dashboard')}}"><h1>{{__('Dashboard')}}</h1></a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{route('tenant.index')}}">{{__('Tenant')}}</a>
+            <a href="{{route('tenantapplication.index')}}">{{__('Tenant Applications')}}</a>
         </li>
         <li class="breadcrumb-item active">
             <a href="#">{{__('Details')}}</a>

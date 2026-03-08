@@ -11,6 +11,11 @@ class Tenant extends Model
 
     protected $fillable=[
         'user_id',
+        'title',
+        'business_name',
+        'business_number',
+        'tax_payer_identification',
+        'contact_information',
         'family_member',
         'profile',
         'address',
@@ -22,6 +27,14 @@ class Tenant extends Model
         'unit',
         'lease_start_date',
         'lease_end_date',
+        'application_status',
+        'verification_status',
+        'approval_status',
+        'verified_by',
+        'approved_by',
+        'verified_at',
+        'approved_at',
+        'application_notes',
         'is_active',
     ];
 

@@ -260,7 +260,7 @@
             @endif
             @endif
 
-            @if(\Auth::check())
+            @if(\Auth::check() && Gate::check('manage phase modules'))
                 <li class="cdxmenu-title">
                     <h5>{{__('Phase Modules')}}</h5>
                 </li>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('page-title')
-    {{__('Tenant')}}
+    {{__('Tenant Applications')}}
 @endsection
 @section('breadcrumb')
     <ul class="breadcrumb mb-0">
@@ -8,14 +8,14 @@
             <a href="{{route('dashboard')}}"><h1>{{__('Dashboard')}}</h1></a>
         </li>
         <li class="breadcrumb-item active">
-            <a href="#">{{__('Tenant')}}</a>
+            <a href="#">{{__('Tenant Applications')}}</a>
         </li>
     </ul>
 @endsection
 @section('card-action-btn')
     @can('create tenant')
-        <a class="btn btn-primary btn-sm ml-20" href="{{ route('tenant.create') }}" data-size="md"> <i
-                class="ti-plus mr-5"></i>{{__('Create Tenant')}}</a>
+        <a class="btn btn-primary btn-sm ml-20" href="{{ route('tenantapplication.create') }}" data-size="md"> <i
+                class="ti-plus mr-5"></i>{{__('New Application')}}</a>
     @endcan
 @endsection
 @section('content')
@@ -32,6 +32,9 @@
             <th scope="col">Contact Information</th>
             <th scope="col">Property </th>
             <th scope="col">Room </th>
+            <th scope="col">Application</th>
+            <th scope="col">Verification</th>
+            <th scope="col">Approval</th>
             <th scope="col">Action</th>
             <!-- Add more headers as needed -->
         </tr>
@@ -82,35 +85,26 @@
                 {{ $property->unit }}
             </div>
         </td>
+        <td>{{ $property->application_status }}</td>
+        <td>{{ $property->verification_status }}</td>
+        <td>{{ $property->approval_status }}</td>
         <td>
-
-            {!! Form::open(['method' => 'DELETE', 'route' => ['property.destroy', $property->id]]) !!}
             <div class="date-info">
-                @can('edit property')
-                <a class="text-success" data-bs-toggle="tooltip"
-                   data-bs-original-title="{{__('Contract')}}"
-                   href="{{ route('contract.create',$property->id) }}"> <i
-                        data-feather="key"></i></a>
-            @endcan
-                @can('edit property')
-                <a class="text-success" data-bs-toggle="tooltip"
-                   data-bs-original-title="{{__('View')}}"
-                   href="{{ route('tenant.edit',$property->id) }}"> <i
-                        data-feather="eye"></i></a>
-            @endcan
-                @can('edit property')
-                    <a class="text-success" data-bs-toggle="tooltip"
-                       data-bs-original-title="{{__('Edit')}}"
-                       href="{{ route('tenant.edit',$property->id) }}"> <i
-                            data-feather="edit"></i></a>
-                @endcan
-                @can('delete property')
-                    <a class=" text-danger confirm_dialog" data-bs-toggle="tooltip"
-                       data-bs-original-title="{{__('Detete')}}" href="#"> <i
-                            data-feather="trash-2"></i></a>
-                @endcan
+                <a class="text-success" data-bs-toggle="tooltip" data-bs-original-title="{{__('Edit')}}" href="{{ route('tenantapplication.edit',$property->id) }}">
+                    <i data-feather="edit"></i>
+                </a>
+                <form method="post" action="{{ route('tenantapplication.update',$property->id) }}" class="d-inline">@csrf @method('PUT')
+                    <input type="hidden" name="application_status" value="reviewed">
+                    <input type="hidden" name="verification_status" value="verified">
+                    <input type="hidden" name="approval_status" value="approved">
+                    <button class="btn p-0 border-0 bg-transparent text-primary" title="{{__('Approve')}}">
+                        <i data-feather="check-circle"></i>
+                    </button>
+                </form>
+                {!! Form::open(['method' => 'DELETE', 'route' => ['tenantapplication.destroy', $property->id], 'class' => 'd-inline']) !!}
+                <button class="btn p-0 border-0 bg-transparent text-danger"><i data-feather="trash-2"></i></button>
+                {!! Form::close() !!}
             </div>
-            {!! Form::close() !!}
         </td>
             <!-- Add more data columns as needed -->
         </tr>

@@ -61,22 +61,65 @@
         </div>
         <div class="col-12">
             <div class="card"><div class="card-header"><h5>{{__('Customers')}}</h5></div><div class="card-body table-responsive">
-                <table class="table"><thead><tr><th>{{__('Type')}}</th><th>{{__('Name')}}</th><th>{{__('Contact')}}</th><th>{{__('Credit')}}</th></tr></thead><tbody>
-                @foreach($customers as $customer)<tr><td>{{$customer->type}}</td><td>{{$customer->name}}</td><td>{{$customer->phone}} / {{$customer->email}}</td><td>{{$customer->credit_balance}}</td></tr>@endforeach
+                <table class="table"><thead><tr><th>{{__('Type')}}</th><th>{{__('Name')}}</th><th>{{__('Contact')}}</th><th>{{__('Credit')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+                @foreach($customers as $customer)
+                    <tr>
+                        <td>{{$customer->type}}</td><td>{{$customer->name}}</td><td>{{$customer->phone}} / {{$customer->email}}</td><td>{{$customer->credit_balance}}</td>
+                        <td>
+                            <form method="post" action="{{route('phase.customers.update',$customer->id)}}" class="d-inline">@csrf @method('PUT')
+                                <input class="form-control form-control-sm mb-1" name="type" value="{{$customer->type}}" required>
+                                <input class="form-control form-control-sm mb-1" name="name" value="{{$customer->name}}" required>
+                                <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                            </form>
+                            <form method="post" action="{{route('phase.customers.destroy',$customer->id)}}" class="d-inline">@csrf @method('DELETE')
+                                <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
                 </tbody></table>
             </div></div>
         </div>
         <div class="col-md-6">
             <div class="card"><div class="card-header"><h5>{{__('Sellers')}}</h5></div><div class="card-body table-responsive">
-                <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Contact')}}</th></tr></thead><tbody>
-                @foreach($sellers as $seller)<tr><td>{{$seller->name}}</td><td>{{$seller->phone}} / {{$seller->email}}</td></tr>@endforeach
+                <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Contact')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+                @foreach($sellers as $seller)
+                    <tr>
+                        <td>{{$seller->name}}</td><td>{{$seller->phone}} / {{$seller->email}}</td>
+                        <td>
+                            <form method="post" action="{{route('phase.sellers.update',$seller->id)}}" class="d-inline">@csrf @method('PUT')
+                                <input class="form-control form-control-sm mb-1" name="name" value="{{$seller->name}}" required>
+                                <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                            </form>
+                            <form method="post" action="{{route('phase.sellers.destroy',$seller->id)}}" class="d-inline">@csrf @method('DELETE')
+                                <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
                 </tbody></table>
             </div></div>
         </div>
         <div class="col-md-6">
             <div class="card"><div class="card-header"><h5>{{__('Agents')}}</h5></div><div class="card-body table-responsive">
-                <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Rule')}}</th><th>{{__('Trigger')}}</th></tr></thead><tbody>
-                @foreach($agents as $agent)<tr><td>{{$agent->name}}</td><td>{{$agent->commission_type}}: {{$agent->commission_value}}</td><td>{{$agent->commission_trigger}}</td></tr>@endforeach
+                <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Rule')}}</th><th>{{__('Trigger')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+                @foreach($agents as $agent)
+                    <tr>
+                        <td>{{$agent->name}}</td><td>{{$agent->commission_type}}: {{$agent->commission_value}}</td><td>{{$agent->commission_trigger}}</td>
+                        <td>
+                            <form method="post" action="{{route('phase.agents.update',$agent->id)}}" class="d-inline">@csrf @method('PUT')
+                                <input class="form-control form-control-sm mb-1" name="name" value="{{$agent->name}}" required>
+                                <input class="form-control form-control-sm mb-1" name="commission_type" value="{{$agent->commission_type}}" required>
+                                <input class="form-control form-control-sm mb-1" name="commission_value" value="{{$agent->commission_value}}" required>
+                                <input class="form-control form-control-sm mb-1" name="commission_trigger" value="{{$agent->commission_trigger}}" required>
+                                <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                            </form>
+                            <form method="post" action="{{route('phase.agents.destroy',$agent->id)}}" class="d-inline">@csrf @method('DELETE')
+                                <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
                 </tbody></table>
             </div></div>
         </div>

@@ -52,22 +52,60 @@
         </div>
 
         <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Email Inbox Threads')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Subject')}}</th><th>{{__('Last Message')}}</th><th>{{__('Status')}}</th><th>{{__('Open')}}</th></tr></thead><tbody>
+            <table class="table"><thead><tr><th>{{__('Subject')}}</th><th>{{__('Last Message')}}</th><th>{{__('Status')}}</th><th>{{__('Open')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
             @foreach($threads as $thread)
-                <tr><td>{{$thread->subject}}</td><td>{{$thread->last_message_at}}</td><td>{{$thread->status}}</td><td><a class="btn btn-sm btn-info" href="{{route('phase.threads.show',$thread->id)}}">{{__('View')}}</a></td></tr>
+                <tr>
+                    <td>{{$thread->subject}}</td><td>{{$thread->last_message_at}}</td><td>{{$thread->status}}</td><td><a class="btn btn-sm btn-info" href="{{route('phase.threads.show',$thread->id)}}">{{__('View')}}</a></td>
+                    <td>
+                        <form method="post" action="{{route('phase.threads.update',$thread->id)}}" class="d-inline">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="subject" value="{{$thread->subject}}" required>
+                            <input class="form-control form-control-sm mb-1" name="status" value="{{$thread->status}}">
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
+                        <form method="post" action="{{route('phase.threads.destroy',$thread->id)}}" class="d-inline">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
+                    </td>
+                </tr>
             @endforeach
             </tbody></table>
         </div></div></div>
 
         <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Latest Notifications')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Channel')}}</th><th>{{__('Recipient')}}</th><th>{{__('Status')}}</th><th>{{__('Time')}}</th></tr></thead><tbody>
-            @foreach($notifications as $n)<tr><td>{{$n->channel}}</td><td>{{$n->recipient}}</td><td>{{$n->status}}</td><td>{{$n->created_at}}</td></tr>@endforeach
+            <table class="table"><thead><tr><th>{{__('Channel')}}</th><th>{{__('Recipient')}}</th><th>{{__('Status')}}</th><th>{{__('Time')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+            @foreach($notifications as $n)
+                <tr>
+                    <td>{{$n->channel}}</td><td>{{$n->recipient}}</td><td>{{$n->status}}</td><td>{{$n->created_at}}</td>
+                    <td>
+                        <form method="post" action="{{route('phase.notifications.update',$n->id)}}" class="d-inline">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="status" value="{{$n->status}}" required>
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
+                        <form method="post" action="{{route('phase.notifications.destroy',$n->id)}}" class="d-inline">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
             </tbody></table>
         </div></div></div>
 
         <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Portal Feedback')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Message')}}</th><th>{{__('Status')}}</th></tr></thead><tbody>
-            @foreach($feedback as $f)<tr><td>{{$f->name}}</td><td>{{$f->message}}</td><td>{{$f->status}}</td></tr>@endforeach
+            <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Message')}}</th><th>{{__('Status')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+            @foreach($feedback as $f)
+                <tr>
+                    <td>{{$f->name}}</td><td>{{$f->message}}</td><td>{{$f->status}}</td>
+                    <td>
+                        <form method="post" action="{{route('phase.feedback.update',$f->id)}}" class="d-inline">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="status" value="{{$f->status}}" required>
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
+                        <form method="post" action="{{route('phase.feedback.destroy',$f->id)}}" class="d-inline">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
             </tbody></table>
         </div></div></div>
 

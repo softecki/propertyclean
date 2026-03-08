@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\IntegrationDispatchService;
 use App\Services\UnifiedPmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,10 +14,12 @@ use Illuminate\Support\Facades\Validator;
 class UnifiedPmsController extends Controller
 {
     protected $service;
+    protected $integrationDispatchService;
 
-    public function __construct(UnifiedPmsService $service)
+    public function __construct(UnifiedPmsService $service, IntegrationDispatchService $integrationDispatchService)
     {
         $this->service = $service;
+        $this->integrationDispatchService = $integrationDispatchService;
     }
 
     public function createBranch(Request $request): JsonResponse
@@ -358,7 +361,7 @@ class UnifiedPmsController extends Controller
 
     public function saleStatement(int $saleId): JsonResponse
     {
-        $sale = DB::table('sales')->where('id', $saleId)->first();
+        $sale = DB::table('sales')->where('id', $saleId)->where('parent_id', $this->parentId())->first();
         if (!$sale) {
             return response()->json(['status' => 'error', 'message' => 'Sale not found.'], 404);
         }
@@ -467,7 +470,7 @@ class UnifiedPmsController extends Controller
 
     public function markUtilityBillPaid(int $billId): JsonResponse
     {
-        $updated = DB::table('utility_bills')->where('id', $billId)->update([
+        $updated = DB::table('utility_bills')->where('id', $billId)->where('parent_id', $this->parentId())->update([
             'status' => 'paid',
             'paid_date' => now()->toDateString(),
             'updated_at' => now(),
@@ -609,7 +612,7 @@ class UnifiedPmsController extends Controller
             return response()->json(['status' => 'error', 'message' => $validator->errors()->first()], 422);
         }
 
-        if (!DB::table('email_threads')->where('id', $threadId)->exists()) {
+        if (!DB::table('email_threads')->where('id', $threadId)->where('parent_id', $this->parentId())->exists()) {
             return response()->json(['status' => 'error', 'message' => 'Thread not found.'], 404);
         }
 
@@ -629,6 +632,17 @@ class UnifiedPmsController extends Controller
             'updated_at' => now(),
         ]);
 
+        if ($request->direction === 'outbound' && !empty($request->to_address)) {
+            $this->integrationDispatchService->dispatch(
+                'email',
+                $request->to_address,
+                $request->subject ?? 'Reply from PMS',
+                $request->body,
+                $this->parentId(),
+                ['reference_type' => 'email_thread', 'reference_id' => $threadId]
+            );
+        }
+
         DB::table('email_threads')->where('id', $threadId)->update([
             'last_message_at' => now(),
             'updated_at' => now(),
@@ -639,7 +653,7 @@ class UnifiedPmsController extends Controller
 
     public function showEmailThread(int $threadId): JsonResponse
     {
-        $thread = DB::table('email_threads')->where('id', $threadId)->first();
+        $thread = DB::table('email_threads')->where('id', $threadId)->where('parent_id', $this->parentId())->first();
         if (!$thread) {
             return response()->json(['status' => 'error', 'message' => 'Thread not found.'], 404);
         }
@@ -679,6 +693,7 @@ class UnifiedPmsController extends Controller
         $baseCurrency = strtoupper($request->get('base_currency', 'TZS'));
 
         $balances = DB::table('sales')
+            ->where('parent_id', $this->parentId())
             ->select('currency_code', DB::raw('SUM(outstanding_balance) as outstanding'))
             ->groupBy('currency_code')
             ->get();
@@ -755,6 +770,20 @@ class UnifiedPmsController extends Controller
             'updated_at' => now(),
         ]);
 
+        $dispatchResult = $this->integrationDispatchService->dispatch(
+            $request->channel,
+            $request->recipient,
+            $request->subject,
+            $request->message,
+            $this->parentId(),
+            ['reference_type' => 'notification', 'reference_id' => $id]
+        );
+
+        DB::table('notification_logs')->where('id', $id)->where('parent_id', $this->parentId())->update([
+            'status' => $dispatchResult['status'],
+            'updated_at' => now(),
+        ]);
+
         return response()->json(['status' => 'success', 'id' => $id], 201);
     }
 
@@ -763,6 +792,38 @@ class UnifiedPmsController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $this->service->reportSummary(),
+        ]);
+    }
+
+    public function rentRollReport(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->service->rentRollReport(),
+        ]);
+    }
+
+    public function receivablesAgingReport(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->service->receivablesAgingReport(),
+        ]);
+    }
+
+    public function excessPaymentReport(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->service->excessPaymentStatements(),
+        ]);
+    }
+
+    public function sellerSettlementReport(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $this->service->sellerSettlementReport(),
         ]);
     }
 

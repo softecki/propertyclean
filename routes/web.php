@@ -18,6 +18,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MaintainerController;
 use App\Http\Controllers\UnifiedPmsWebController;
+use App\Http\Controllers\AssetController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoicePaymentController;
@@ -74,6 +75,7 @@ Route::group(
         'middleware' => [
             'auth',
             'XSS',
+            'can:manage phase modules',
         ],
     ], function (){
 
@@ -101,39 +103,72 @@ Route::group(
 
         Route::get('/land', [UnifiedPmsWebController::class, 'land'])->name('land');
         Route::post('/branches', [UnifiedPmsWebController::class, 'storeBranch'])->name('branches.store');
+        Route::put('/branches/{id}', [UnifiedPmsWebController::class, 'updateBranch'])->name('branches.update');
+        Route::delete('/branches/{id}', [UnifiedPmsWebController::class, 'destroyBranch'])->name('branches.destroy');
         Route::post('/projects', [UnifiedPmsWebController::class, 'storeProject'])->name('projects.store');
+        Route::put('/projects/{id}', [UnifiedPmsWebController::class, 'updateProject'])->name('projects.update');
+        Route::delete('/projects/{id}', [UnifiedPmsWebController::class, 'destroyProject'])->name('projects.destroy');
         Route::post('/blocks', [UnifiedPmsWebController::class, 'storeBlock'])->name('blocks.store');
+        Route::put('/blocks/{id}', [UnifiedPmsWebController::class, 'updateBlock'])->name('blocks.update');
+        Route::delete('/blocks/{id}', [UnifiedPmsWebController::class, 'destroyBlock'])->name('blocks.destroy');
         Route::post('/plots', [UnifiedPmsWebController::class, 'storePlot'])->name('plots.store');
+        Route::put('/plots/{id}', [UnifiedPmsWebController::class, 'updatePlot'])->name('plots.update');
+        Route::delete('/plots/{id}', [UnifiedPmsWebController::class, 'destroyPlot'])->name('plots.destroy');
+        Route::post('/land-rates', [UnifiedPmsWebController::class, 'storeLandRatePayment'])->name('land-rates.store');
+        Route::put('/land-rates/{id}', [UnifiedPmsWebController::class, 'updateLandRatePayment'])->name('land-rates.update');
+        Route::delete('/land-rates/{id}', [UnifiedPmsWebController::class, 'destroyLandRatePayment'])->name('land-rates.destroy');
 
         Route::get('/parties', [UnifiedPmsWebController::class, 'parties'])->name('parties');
         Route::post('/customers', [UnifiedPmsWebController::class, 'storeCustomer'])->name('customers.store');
+        Route::put('/customers/{id}', [UnifiedPmsWebController::class, 'updateCustomer'])->name('customers.update');
+        Route::delete('/customers/{id}', [UnifiedPmsWebController::class, 'destroyCustomer'])->name('customers.destroy');
         Route::post('/sellers', [UnifiedPmsWebController::class, 'storeSeller'])->name('sellers.store');
+        Route::put('/sellers/{id}', [UnifiedPmsWebController::class, 'updateSeller'])->name('sellers.update');
+        Route::delete('/sellers/{id}', [UnifiedPmsWebController::class, 'destroySeller'])->name('sellers.destroy');
         Route::post('/agents', [UnifiedPmsWebController::class, 'storeAgent'])->name('agents.store');
+        Route::put('/agents/{id}', [UnifiedPmsWebController::class, 'updateAgent'])->name('agents.update');
+        Route::delete('/agents/{id}', [UnifiedPmsWebController::class, 'destroyAgent'])->name('agents.destroy');
 
         Route::get('/sales', [UnifiedPmsWebController::class, 'sales'])->name('sales');
         Route::post('/sales', [UnifiedPmsWebController::class, 'storeSale'])->name('sales.store');
         Route::post('/sales/{saleId}/charges', [UnifiedPmsWebController::class, 'addSaleCharge'])->name('sales.charges.store');
         Route::post('/sales/{saleId}/payments', [UnifiedPmsWebController::class, 'addSalePayment'])->name('sales.payments.store');
         Route::post('/sales/{saleId}/status', [UnifiedPmsWebController::class, 'updateSaleStatus'])->name('sales.status.update');
+        Route::delete('/sales/{saleId}', [UnifiedPmsWebController::class, 'destroySale'])->name('sales.destroy');
 
         Route::get('/finance', [UnifiedPmsWebController::class, 'finance'])->name('finance');
         Route::post('/control-numbers', [UnifiedPmsWebController::class, 'storeControlNumber'])->name('control-numbers.store');
+        Route::delete('/control-numbers/{id}', [UnifiedPmsWebController::class, 'destroyControlNumber'])->name('control-numbers.destroy');
         Route::post('/currency-rates', [UnifiedPmsWebController::class, 'storeCurrencyRate'])->name('currency-rates.store');
+        Route::put('/currency-rates/{id}', [UnifiedPmsWebController::class, 'updateCurrencyRate'])->name('currency-rates.update');
+        Route::delete('/currency-rates/{id}', [UnifiedPmsWebController::class, 'destroyCurrencyRate'])->name('currency-rates.destroy');
         Route::post('/commissions/{commissionId}/pay', [UnifiedPmsWebController::class, 'payCommission'])->name('commissions.pay');
 
         Route::get('/operations', [UnifiedPmsWebController::class, 'operations'])->name('operations');
         Route::post('/utility-bills', [UnifiedPmsWebController::class, 'storeUtilityBill'])->name('utility-bills.store');
+        Route::put('/utility-bills/{billId}', [UnifiedPmsWebController::class, 'updateUtilityBill'])->name('utility-bills.update');
         Route::post('/utility-bills/{billId}/paid', [UnifiedPmsWebController::class, 'markUtilityBillPaid'])->name('utility-bills.paid');
+        Route::delete('/utility-bills/{billId}', [UnifiedPmsWebController::class, 'destroyUtilityBill'])->name('utility-bills.destroy');
         Route::post('/maintenance-schedules', [UnifiedPmsWebController::class, 'storeMaintenanceSchedule'])->name('maintenance-schedules.store');
+        Route::put('/maintenance-schedules/{id}', [UnifiedPmsWebController::class, 'updateMaintenanceSchedule'])->name('maintenance-schedules.update');
+        Route::delete('/maintenance-schedules/{id}', [UnifiedPmsWebController::class, 'destroyMaintenanceSchedule'])->name('maintenance-schedules.destroy');
         Route::post('/assets', [UnifiedPmsWebController::class, 'storeAsset'])->name('assets.store');
+        Route::put('/assets/{assetId}', [UnifiedPmsWebController::class, 'updateAsset'])->name('assets.update');
         Route::post('/assets/{assetId}/depreciate', [UnifiedPmsWebController::class, 'depreciateAsset'])->name('assets.depreciate');
+        Route::delete('/assets/{assetId}', [UnifiedPmsWebController::class, 'destroyAsset'])->name('assets.destroy');
 
         Route::get('/communications', [UnifiedPmsWebController::class, 'communications'])->name('communications');
         Route::get('/communications/threads/{threadId}', [UnifiedPmsWebController::class, 'showThread'])->name('threads.show');
         Route::post('/communications/threads', [UnifiedPmsWebController::class, 'storeThread'])->name('threads.store');
         Route::post('/communications/threads/{threadId}/messages', [UnifiedPmsWebController::class, 'storeThreadMessage'])->name('threads.messages.store');
+        Route::put('/communications/threads/{threadId}', [UnifiedPmsWebController::class, 'updateThread'])->name('threads.update');
+        Route::delete('/communications/threads/{threadId}', [UnifiedPmsWebController::class, 'destroyThread'])->name('threads.destroy');
         Route::post('/communications/feedback', [UnifiedPmsWebController::class, 'storeFeedback'])->name('feedback.store');
+        Route::put('/communications/feedback/{id}', [UnifiedPmsWebController::class, 'updateFeedback'])->name('feedback.update');
+        Route::delete('/communications/feedback/{id}', [UnifiedPmsWebController::class, 'destroyFeedback'])->name('feedback.destroy');
         Route::post('/communications/notifications', [UnifiedPmsWebController::class, 'storeNotification'])->name('notifications.store');
+        Route::put('/communications/notifications/{id}', [UnifiedPmsWebController::class, 'updateNotification'])->name('notifications.update');
+        Route::delete('/communications/notifications/{id}', [UnifiedPmsWebController::class, 'destroyNotification'])->name('notifications.destroy');
         Route::post('/communications/reminders', [UnifiedPmsWebController::class, 'generateReminders'])->name('reminders.generate');
 
         Route::get('/reports', [UnifiedPmsWebController::class, 'reports'])->name('reports');
@@ -299,7 +334,7 @@ Route::resource('contract', ContractController::class)->middleware(
 
 //-------------------------------Assets-------------------------------------------
 
-Route::resource('asset', ContractController::class)->middleware(
+Route::resource('asset', AssetController::class)->middleware(
     [
         'auth',
         'XSS',

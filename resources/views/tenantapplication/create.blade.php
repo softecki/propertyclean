@@ -46,7 +46,7 @@
                 fd.append(input.name, input.value);
             });
             $.ajax({
-                url: "{{route('tenant.store')}}",
+                url: "{{route('tenantapplication.store')}}",
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
@@ -58,7 +58,7 @@
                     if (data.status == "success") {
                         $('#tenant-submit').attr('disabled', true);
                         toastrs(data.status, data.msg, data.status);
-                        var url = '{{ route("tenant.index") }}';
+                        var url = '{{ route("tenantapplication.index") }}';
                         setTimeout(() => {
                             window.location.href = url;
                         }, "1000");
@@ -118,7 +118,7 @@
             <a href="{{route('dashboard')}}"><h1>{{__('Dashboard')}}</h1></a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{route('tenant.index')}}">{{__('Tenant')}}</a>
+            <a href="{{route('tenantapplication.index')}}">{{__('Tenant Applications')}}</a>
         </li>
         <li class="breadcrumb-item active">
             <a href="#">{{__('Create')}}</a>

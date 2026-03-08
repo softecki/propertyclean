@@ -117,6 +117,9 @@
                                         <button class="btn btn-sm btn-success ms-1">{{__('Pay')}}</button>
                                     </div>
                                 </form>
+                                <form class="mt-1" method="post" action="{{route('phase.sales.destroy',$sale->id)}}">@csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">{{__('Cancel/Delete Sale')}}</button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach

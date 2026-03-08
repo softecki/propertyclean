@@ -68,14 +68,39 @@
         </div></div></div>
 
         <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Control Numbers')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Control No')}}</th><th>{{__('Reference')}}</th><th>{{__('Amount')}}</th><th>{{__('Status')}}</th></tr></thead><tbody>
-            @foreach($controlNumbers as $cn)<tr><td>{{$cn->control_number}}</td><td>{{$cn->reference_type}} #{{$cn->reference_id}}</td><td>{{$cn->amount}} {{$cn->currency_code}}</td><td>{{$cn->status}}</td></tr>@endforeach
+            <table class="table"><thead><tr><th>{{__('Control No')}}</th><th>{{__('Reference')}}</th><th>{{__('Amount')}}</th><th>{{__('Status')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+            @foreach($controlNumbers as $cn)
+                <tr>
+                    <td>{{$cn->control_number}}</td><td>{{$cn->reference_type}} #{{$cn->reference_id}}</td><td>{{$cn->amount}} {{$cn->currency_code}}</td><td>{{$cn->status}}</td>
+                    <td>
+                        <form method="post" action="{{route('phase.control-numbers.destroy',$cn->id)}}">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
             </tbody></table>
         </div></div></div>
 
         <div class="col-12"><div class="card"><div class="card-header"><h5>{{__('Currency Rates')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Base')}}</th><th>{{__('Quote')}}</th><th>{{__('Rate')}}</th><th>{{__('Effective Date')}}</th></tr></thead><tbody>
-            @foreach($currencyRates as $rate)<tr><td>{{$rate->base_currency}}</td><td>{{$rate->quote_currency}}</td><td>{{$rate->rate}}</td><td>{{$rate->effective_date}}</td></tr>@endforeach
+            <table class="table"><thead><tr><th>{{__('Base')}}</th><th>{{__('Quote')}}</th><th>{{__('Rate')}}</th><th>{{__('Effective Date')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+            @foreach($currencyRates as $rate)
+                <tr>
+                    <td>{{$rate->base_currency}}</td><td>{{$rate->quote_currency}}</td><td>{{$rate->rate}}</td><td>{{$rate->effective_date}}</td>
+                    <td>
+                        <form method="post" action="{{route('phase.currency-rates.update',$rate->id)}}" class="d-inline">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="base_currency" value="{{$rate->base_currency}}" required>
+                            <input class="form-control form-control-sm mb-1" name="quote_currency" value="{{$rate->quote_currency}}" required>
+                            <input class="form-control form-control-sm mb-1" type="number" step="0.000001" name="rate" value="{{$rate->rate}}" required>
+                            <input class="form-control form-control-sm mb-1" type="date" name="effective_date" value="{{$rate->effective_date}}" required>
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
+                        <form method="post" action="{{route('phase.currency-rates.destroy',$rate->id)}}" class="d-inline">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
             </tbody></table>
         </div></div></div>
     </div>

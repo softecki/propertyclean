@@ -20,6 +20,9 @@ class TenantController extends Controller
     {
         if (\Auth::user()->can('manage tenant')) {
             $tenants = Tenant::where('parent_id',parentId())->get();
+            if (request()->routeIs('tenantapplication.*')) {
+                return view('tenantapplication.index', compact('tenants'));
+            }
             return view('tenant.index', compact('tenants'));
         } else {
             return redirect()->back()->with('error', __('Permission Denied!'));
@@ -32,6 +35,9 @@ class TenantController extends Controller
         if (\Auth::user()->can('create tenant')) {
             $property = Property::where('parent_id',parentId())->get()->pluck('name', 'id');
             $property->prepend(__('Select Property'), 0);
+            if (request()->routeIs('tenantapplication.*')) {
+                return view('tenantapplication.create', compact('property'));
+            }
             return view('tenant.create', compact('property'));
         } else {
             return redirect()->back()->with('error', __('Permission Denied!'));
@@ -123,6 +129,9 @@ class TenantController extends Controller
             $tenant->unit = $request->unit;
             $tenant->lease_start_date = $request->lease_start_date;
             $tenant->lease_end_date = $request->lease_end_date;
+            $tenant->application_status = 'new';
+            $tenant->verification_status = 'pending';
+            $tenant->approval_status = 'pending';
             $tenant->parent_id =parentId();
             $tenant->save();
 
@@ -130,108 +139,12 @@ class TenantController extends Controller
             $tenantImage = new TenantDocument();
             $tenantImage->property_id = $request->property;
             $tenantImage->tenant_id = $tenant->id;
-
-
-            // if (!empty($request->bank_statement)) {
-                // foreach ($request->bank_statement as $file) {
-                    // $tenantFilenameWithExt = $request->bank_statement->getClientOriginalName();
-                    // $tenantFilename = pathinfo($tenantFilenameWithExt, PATHINFO_FILENAME);
-                    // $tenantExtension = $request->bank_statement->getClientOriginalExtension();
-                    // $tenantFileName = $tenantFilename . '_' . time() . '.' . $tenantExtension;
-                    // // $dir = storage_path('upload/tenant');
-                    // $dir = storage_path('app/public/upload/tenant'); // Corrected path for storage
-                    // if (!file_exists($dir)) {
-                    //     mkdir($dir, 0777, true);
-                    // }
-                    // // $file->storeAs('upload/tenant/', $tenantFileName);
-                    // $file->storeAs('public/upload/tenant/', $tenantFileName); // Corrected storage path
-
-
-
-                    $tenantImage->document = $request->contract;
-                // }
-            // }
-
-
-
-            // // if (!empty($request->contract)) {
-            //     foreach ($request->contract as $file) {
-            //         $tenantFilenameWithExt = $file->getClientOriginalName();
-            //         $tenantFilename = pathinfo($tenantFilenameWithExt, PATHINFO_FILENAME);
-            //         $tenantExtension = $file->getClientOriginalExtension();
-            //         $tenantFileName = $tenantFilename . '_' . time() . '.' . $tenantExtension;
-            //         // $dir = storage_path('upload/tenant');
-            //         $dir = storage_path('app/public/upload/tenant'); // Corrected path for storage
-
-            //         if (!file_exists($dir)) {
-            //             mkdir($dir, 0777, true);
-            //         }
-            //         // $file->storeAs('upload/tenant/', $tenantFileName);
-            //         $file->storeAs('public/upload/tenant/', $tenantFileName); // Corrected storage path
-
-            //         $tenantImage->contract = $tenantFileName;
-            //         // $tenantImage->save();
-            //     }
-            // // }
-
-            // // if (!empty($request->memorandum)) {
-            //     foreach ($request->memorandum as $file) {
-            //         $tenantFilenameWithExt = $file->getClientOriginalName();
-            //         $tenantFilename = pathinfo($tenantFilenameWithExt, PATHINFO_FILENAME);
-            //         $tenantExtension = $file->getClientOriginalExtension();
-            //         $tenantFileName = $tenantFilename . '_' . time() . '.' . $tenantExtension;
-            //         // $dir = storage_path('upload/tenant');
-            //         $dir = storage_path('app/public/upload/tenant'); // Corrected path for storage
-
-            //         if (!file_exists($dir)) {
-            //             mkdir($dir, 0777, true);
-            //         }
-            //         // $file->storeAs('upload/tenant/', $tenantFileName);
-            //         $file->storeAs('public/upload/tenant/', $tenantFileName); // Corrected storage path
-
-            //         $tenantImage->memorandum = $tenantFileName;
-            //         // $tenantImage->save();
-            //     }
-            // // }
-
-            // // if (!empty($request->trading_licence)) {
-            //     foreach ($request->trading_licence as $file) {
-            //         $tenantFilenameWithExt = $file->getClientOriginalName();
-            //         $tenantFilename = pathinfo($tenantFilenameWithExt, PATHINFO_FILENAME);
-            //         $tenantExtension = $file->getClientOriginalExtension();
-            //         $tenantFileName = $tenantFilename . '_' . time() . '.' . $tenantExtension;
-            //         // $dir = storage_path('upload/tenant');
-            //         $dir = storage_path('app/public/upload/tenant'); // Corrected path for storage
-
-            //         if (!file_exists($dir)) {
-            //             mkdir($dir, 0777, true);
-            //         }
-            //         // $file->storeAs('upload/tenant/', $tenantFileName);
-            //         $file->storeAs('public/upload/tenant/', $tenantFileName);
-            //         $tenantImage->trading_licence = $tenantFileName;
-            //         // $tenantImage->save();
-            //     }
-            // // }
-
-            // // if (!empty($request->application_flow)) {
-            //     foreach ($request->application_flow as $file) {
-            //         $tenantFilenameWithExt = $file->getClientOriginalName();
-            //         $tenantFilename = pathinfo($tenantFilenameWithExt, PATHINFO_FILENAME);
-            //         $tenantExtension = $file->getClientOriginalExtension();
-            //         $tenantFileName = $tenantFilename . '_' . time() . '.' . $tenantExtension;
-            //         // $dir = storage_path('upload/tenant');
-            //         $dir = storage_path('app/public/upload/tenant');
-            //         if (!file_exists($dir)) {
-            //             mkdir($dir, 0777, true);
-            //         }
-            //         // $file->storeAs('upload/tenant/', $tenantFileName);
-            //         $file->storeAs('public/upload/tenant/', $tenantFileName);
-            //         $tenantImage->application_flow = $tenantFileName;
-            //         // $tenantImage->save();
-            //     }
-            // // }
-
-
+            $tenantImage->bank_statement = $this->uploadTenantFile($request, 'bank_statement');
+            $tenantImage->previous_lease_contract = $this->uploadTenantFile($request, 'contract');
+            $tenantImage->memorandum_of_association = $this->uploadTenantFile($request, 'memorandum');
+            $tenantImage->trading_license = $this->uploadTenantFile($request, 'trading_licence');
+            $tenantImage->application_flow_document = $this->uploadTenantFile($request, 'application_flow');
+            $tenantImage->document = $tenantImage->previous_lease_contract;
             $tenantImage->parent_id =parentId();
             $tenantImage->save();
 
@@ -260,6 +173,9 @@ class TenantController extends Controller
     public function show(Tenant $tenant)
     {
         if (\Auth::user()->can('show tenant')) {
+            if (request()->routeIs('tenantapplication.*')) {
+                return view('tenantapplication.show', compact('tenant'));
+            }
             return view('tenant.show', compact('tenant'));
         } else {
             return redirect()->back()->with('error', __('Permission Denied!'));
@@ -274,6 +190,9 @@ class TenantController extends Controller
             $property->prepend(__('Select Property'), 0);
 
             $user=User::find($tenant->user_id);
+            if (request()->routeIs('tenantapplication.*')) {
+                return view('tenantapplication.edit', compact('property', 'tenant','user'));
+            }
             return view('tenant.edit', compact('property', 'tenant','user'));
         } else {
             return redirect()->back()->with('error', __('Permission Denied!'));
@@ -284,6 +203,29 @@ class TenantController extends Controller
     public function update(Request $request, Tenant $tenant)
     {
         if (\Auth::user()->can('edit tenant')) {
+            if ($request->routeIs('tenantapplication.update')) {
+                $request->validate([
+                    'application_status' => 'required|string|max:50',
+                    'verification_status' => 'required|string|max:50',
+                    'approval_status' => 'required|string|max:50',
+                    'application_notes' => 'nullable|string|max:2000',
+                ]);
+
+                $tenant->application_status = $request->application_status;
+                $tenant->verification_status = $request->verification_status;
+                $tenant->approval_status = $request->approval_status;
+                $tenant->application_notes = $request->application_notes;
+                $tenant->verified_by = \Auth::id();
+                $tenant->verified_at = now();
+                if ($request->approval_status === 'approved') {
+                    $tenant->approved_by = \Auth::id();
+                    $tenant->approved_at = now();
+                }
+                $tenant->save();
+
+                return redirect()->route('tenantapplication.index')->with('success', __('Application workflow updated.'));
+            }
+
             $validator = \Validator::make(
                 $request->all(), [
                 'first_name' => 'required',
@@ -343,6 +285,22 @@ class TenantController extends Controller
             $tenant->unit = $request->unit;
             $tenant->lease_start_date = $request->lease_start_date;
             $tenant->lease_end_date = $request->lease_end_date;
+            if ($request->filled('verification_status')) {
+                $tenant->verification_status = $request->verification_status;
+                $tenant->verified_by = \Auth::id();
+                $tenant->verified_at = now();
+            }
+            if ($request->filled('approval_status')) {
+                $tenant->approval_status = $request->approval_status;
+                $tenant->approved_by = \Auth::id();
+                $tenant->approved_at = now();
+            }
+            if ($request->filled('application_status')) {
+                $tenant->application_status = $request->application_status;
+            }
+            if ($request->filled('application_notes')) {
+                $tenant->application_notes = $request->application_notes;
+            }
             $tenant->save();
 
 
@@ -368,6 +326,21 @@ class TenantController extends Controller
                 }
             }
 
+            $tenantDocument = TenantDocument::where('tenant_id', $tenant->id)->first();
+            if (!$tenantDocument) {
+                $tenantDocument = new TenantDocument();
+                $tenantDocument->tenant_id = $tenant->id;
+                $tenantDocument->property_id = $request->property;
+                $tenantDocument->parent_id = parentId();
+            }
+            $tenantDocument->bank_statement = $this->uploadTenantFile($request, 'bank_statement') ?: $tenantDocument->bank_statement;
+            $tenantDocument->previous_lease_contract = $this->uploadTenantFile($request, 'contract') ?: $tenantDocument->previous_lease_contract;
+            $tenantDocument->memorandum_of_association = $this->uploadTenantFile($request, 'memorandum') ?: $tenantDocument->memorandum_of_association;
+            $tenantDocument->trading_license = $this->uploadTenantFile($request, 'trading_licence') ?: $tenantDocument->trading_license;
+            $tenantDocument->application_flow_document = $this->uploadTenantFile($request, 'application_flow') ?: $tenantDocument->application_flow_document;
+            $tenantDocument->document = $tenantDocument->previous_lease_contract;
+            $tenantDocument->save();
+
             return response()->json([
                 'status' => 'success',
                 'msg' => __('Tenant successfully updated.'),
@@ -386,6 +359,30 @@ class TenantController extends Controller
         } else {
             return redirect()->back()->with('error', __('Permission Denied!'));
         }
+    }
+
+    private function uploadTenantFile(Request $request, string $key): ?string
+    {
+        if (!$request->hasFile($key)) {
+            return null;
+        }
+
+        $file = $request->file($key);
+        if (!$file) {
+            return null;
+        }
+
+        $filenameWithExt = $file->getClientOriginalName();
+        $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+        $extension = $file->getClientOriginalExtension();
+        $fileNameToStore = $filename . '_' . time() . '.' . $extension;
+        $dir = storage_path('upload/tenant');
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        $file->storeAs('upload/tenant/', $fileNameToStore);
+
+        return $fileNameToStore;
     }
 
 }

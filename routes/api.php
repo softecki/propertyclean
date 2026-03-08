@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::prefix('v1')->group(function () {
+Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Master setup
     Route::post('branches', [UnifiedPmsController::class, 'createBranch']);
     Route::post('projects', [UnifiedPmsController::class, 'createProject']);
@@ -59,6 +59,10 @@ Route::prefix('v1')->group(function () {
     Route::post('currency-rates', [UnifiedPmsController::class, 'addCurrencyRate']);
     Route::get('reports/currency-valuation', [UnifiedPmsController::class, 'currencyValuationReport']);
     Route::get('reports/summary', [UnifiedPmsController::class, 'reportSummary']);
+    Route::get('reports/rent-roll', [UnifiedPmsController::class, 'rentRollReport']);
+    Route::get('reports/receivables-aging', [UnifiedPmsController::class, 'receivablesAgingReport']);
+    Route::get('reports/excess-payments', [UnifiedPmsController::class, 'excessPaymentReport']);
+    Route::get('reports/seller-settlement', [UnifiedPmsController::class, 'sellerSettlementReport']);
     Route::post('notifications/reminders/generate', [UnifiedPmsController::class, 'generateReminders']);
     Route::post('notifications', [UnifiedPmsController::class, 'createNotification']);
 });

@@ -9,11 +9,45 @@ use Illuminate\Support\Str;
 
 class UnifiedPmsService
 {
+    private IntegrationDispatchService $integrationDispatchService;
+
+    public function __construct(IntegrationDispatchService $integrationDispatchService)
+    {
+        $this->integrationDispatchService = $integrationDispatchService;
+    }
+
     public function createSale(array $payload): array
     {
         return DB::transaction(function () use ($payload) {
             $parentId = $this->parentId();
             $agreementNo = $payload['agreement_no'] ?? ('SAL-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4)));
+
+            $plot = DB::table('plots')->where('id', $payload['plot_id'])->where('parent_id', $parentId)->first();
+            if (!$plot) {
+                abort(422, 'Plot not found in your workspace.');
+            }
+            if ($plot->status !== 'available') {
+                abort(422, 'Selected plot is not available.');
+            }
+
+            $customer = DB::table('customers')->where('id', $payload['customer_id'])->where('parent_id', $parentId)->first();
+            if (!$customer) {
+                abort(422, 'Customer not found in your workspace.');
+            }
+
+            if (!empty($payload['seller_id'])) {
+                $seller = DB::table('sellers')->where('id', $payload['seller_id'])->where('parent_id', $parentId)->first();
+                if (!$seller) {
+                    abort(422, 'Seller not found in your workspace.');
+                }
+            }
+
+            if (!empty($payload['agent_id'])) {
+                $agent = DB::table('agents')->where('id', $payload['agent_id'])->where('parent_id', $parentId)->first();
+                if (!$agent) {
+                    abort(422, 'Agent not found in your workspace.');
+                }
+            }
 
             $saleId = DB::table('sales')->insertGetId([
                 'parent_id' => $parentId,
@@ -81,10 +115,7 @@ class UnifiedPmsService
 
     public function recalculateSale(int $saleId): object
     {
-        $sale = DB::table('sales')->where('id', $saleId)->first();
-        if (!$sale) {
-            abort(404, 'Sale not found.');
-        }
+        $sale = $this->getSaleForParentOrFail($saleId);
 
         $extraChargeTotal = (float) DB::table('sale_extra_charges')->where('sale_id', $saleId)->sum('amount');
         $totalPaid = (float) DB::table('sale_payments')->where('sale_id', $saleId)->sum('amount');
@@ -136,10 +167,7 @@ class UnifiedPmsService
     public function recordSalePayment(int $saleId, array $payload): array
     {
         return DB::transaction(function () use ($saleId, $payload) {
-            $sale = DB::table('sales')->where('id', $saleId)->first();
-            if (!$sale) {
-                abort(404, 'Sale not found.');
-            }
+            $sale = $this->getSaleForParentOrFail($saleId);
 
             $paymentId = DB::table('sale_payments')->insertGetId([
                 'sale_id' => $saleId,
@@ -216,10 +244,7 @@ class UnifiedPmsService
     public function updateSaleStatus(int $saleId, string $status): object
     {
         return DB::transaction(function () use ($saleId, $status) {
-            $sale = DB::table('sales')->where('id', $saleId)->first();
-            if (!$sale) {
-                abort(404, 'Sale not found.');
-            }
+            $sale = $this->getSaleForParentOrFail($saleId);
 
             $update = [
                 'status' => $status,
@@ -258,9 +283,10 @@ class UnifiedPmsService
 
     public function createControlNumber(array $payload): array
     {
+        $parentId = $this->parentId();
         $controlNumber = 'CN-' . now()->format('YmdHis') . '-' . random_int(1000, 9999);
         $id = DB::table('bank_control_numbers')->insertGetId([
-            'parent_id' => $this->parentId(),
+            'parent_id' => $parentId,
             'reference_type' => $payload['reference_type'],
             'reference_id' => $payload['reference_id'],
             'bank_name' => $payload['bank_name'] ?? null,
@@ -272,6 +298,14 @@ class UnifiedPmsService
             'response_payload' => isset($payload['response_payload']) ? json_encode($payload['response_payload']) : null,
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+
+        $this->integrationDispatchService->logBankEvent($parentId, (string) $payload['reference_type'], (int) $payload['reference_id'], [
+            'bank_name' => $payload['bank_name'] ?? null,
+            'control_number' => $controlNumber,
+            'amount' => $payload['amount'] ?? 0,
+            'currency_code' => $payload['currency_code'] ?? 'TZS',
+            'control_number_id' => $id,
         ]);
 
         return [
@@ -328,6 +362,7 @@ class UnifiedPmsService
         $count = 0;
 
         $dueInvoices = DB::table('invoices')
+            ->where('parent_id', $parentId)
             ->whereIn('status', ['open', 'partial_paid'])
             ->whereDate('end_date', '<=', $dueDate)
             ->get();
@@ -349,6 +384,7 @@ class UnifiedPmsService
         }
 
         $expiringContracts = DB::table('contracts')
+            ->where('user_id', $parentId)
             ->whereNotNull('lease_end_date')
             ->whereDate('lease_end_date', '<=', $dueDate)
             ->get();
@@ -370,6 +406,7 @@ class UnifiedPmsService
         }
 
         $dueMaintenance = DB::table('maintenance_schedules')
+            ->where('parent_id', $parentId)
             ->where('status', 'scheduled')
             ->whereDate('next_maintenance_date', '<=', $dueDate)
             ->get();
@@ -395,27 +432,35 @@ class UnifiedPmsService
 
     public function reportSummary(): array
     {
-        $totalUnits = (int) DB::table('property_units')->count();
-        $occupiedUnits = (int) DB::table('property_units')->where('status', 'occupied')->count();
+        $parentId = $this->parentId();
+        $propertyIds = DB::table('properties')->where('parent_id', $parentId)->pluck('id');
+
+        $totalUnits = (int) DB::table('property_units')->whereIn('property_id', $propertyIds)->count();
+        $occupiedUnits = (int) DB::table('property_units')->whereIn('property_id', $propertyIds)->where('status', 'occupied')->count();
         $occupancyRate = $totalUnits > 0 ? round(($occupiedUnits / $totalUnits) * 100, 2) : 0;
 
-        $availableArea = (float) DB::table('property_units')->whereIn('status', ['vacant', 'on-hold'])->sum('size_sqm');
-        $occupiedArea = (float) DB::table('property_units')->where('status', 'occupied')->sum('size_sqm');
-        $averageLeaseRate = (float) DB::table('property_units')->avg('rent');
+        $availableArea = (float) DB::table('property_units')->whereIn('property_id', $propertyIds)->whereIn('status', ['vacant', 'on-hold'])->sum('size_sqm');
+        $occupiedArea = (float) DB::table('property_units')->whereIn('property_id', $propertyIds)->where('status', 'occupied')->sum('size_sqm');
+        $averageLeaseRate = (float) DB::table('property_units')->whereIn('property_id', $propertyIds)->avg('rent');
 
-        $salesTotal = (float) DB::table('sales')->sum('total_contract_value');
-        $cashIn = (float) DB::table('sale_payments')->sum('amount') + (float) DB::table('invoice_payments')->sum('amount');
-        $outstanding = (float) DB::table('receivables')->sum('balance');
-        $excessPayments = (float) DB::table('customer_credits')->sum('balance');
-        $pendingCommissions = (float) DB::table('commissions')->where('status', 'pending')->sum('commission_amount');
-        $paidCommissions = (float) DB::table('commission_payments')->sum('amount');
-        $expenseTotal = (float) DB::table('expenses')->sum('amount');
-        $deferredRevenue = (float) DB::table('sales')->sum('deferred_revenue');
+        $saleIds = DB::table('sales')->where('parent_id', $parentId)->pluck('id');
+        $commissionIds = DB::table('commissions')->whereIn('sale_id', $saleIds)->pluck('id');
+
+        $salesTotal = (float) DB::table('sales')->where('parent_id', $parentId)->sum('total_contract_value');
+        $cashIn = (float) DB::table('sale_payments')->whereIn('sale_id', $saleIds)->sum('amount')
+            + (float) DB::table('invoice_payments')->where('parent_id', $parentId)->sum('amount');
+        $outstanding = (float) DB::table('receivables')->whereIn('sale_id', $saleIds)->sum('balance');
+        $excessPayments = (float) DB::table('customer_credits')->whereIn('sale_id', $saleIds)->sum('balance');
+        $pendingCommissions = (float) DB::table('commissions')->whereIn('sale_id', $saleIds)->where('status', 'pending')->sum('commission_amount');
+        $paidCommissions = (float) DB::table('commission_payments')->whereIn('commission_id', $commissionIds)->sum('amount');
+        $expenseTotal = (float) DB::table('expenses')->where('parent_id', $parentId)->sum('amount');
+        $deferredRevenue = (float) DB::table('sales')->where('parent_id', $parentId)->sum('deferred_revenue');
         $profitEstimate = round($salesTotal - ($expenseTotal + $paidCommissions), 2);
 
         $projectProfit = DB::table('sales as s')
             ->leftJoin('projects as p', 'p.id', '=', 's.project_id')
             ->leftJoin('commissions as c', 'c.sale_id', '=', 's.id')
+            ->where('s.parent_id', $parentId)
             ->selectRaw('p.name as project_name, SUM(s.total_contract_value) as revenue, SUM(COALESCE(c.commission_amount, 0)) as commission, SUM(s.total_contract_value) - SUM(COALESCE(c.commission_amount, 0)) as gross_profit')
             ->groupBy('p.name')
             ->get()
@@ -441,14 +486,110 @@ class UnifiedPmsService
         ];
     }
 
+    public function rentRollReport(): array
+    {
+        $parentId = $this->parentId();
+
+        return DB::table('invoices')
+            ->where('parent_id', $parentId)
+            ->select(
+                'id',
+                'invoice_id',
+                'tenant_id',
+                'property_id',
+                'unit_id',
+                'amount',
+                'status',
+                'start_date',
+                'end_date',
+                DB::raw('CASE WHEN status IN ("paid","cancelled") THEN 0 WHEN CURDATE() > end_date THEN DATEDIFF(CURDATE(), end_date) ELSE 0 END as days_past_due')
+            )
+            ->orderByDesc('days_past_due')
+            ->get()
+            ->toArray();
+    }
+
+    public function receivablesAgingReport(): array
+    {
+        $saleIds = DB::table('sales')->where('parent_id', $this->parentId())->pluck('id');
+
+        $rows = DB::table('receivables')->whereIn('sale_id', $saleIds)->get();
+        $buckets = [
+            'current' => 0.0,
+            '1_30' => 0.0,
+            '31_60' => 0.0,
+            '61_90' => 0.0,
+            '90_plus' => 0.0,
+        ];
+
+        foreach ($rows as $row) {
+            $balance = (float) $row->balance;
+            $days = Carbon::parse($row->due_date)->diffInDays(now(), false);
+            if ($days <= 0) {
+                $buckets['current'] += $balance;
+            } elseif ($days <= 30) {
+                $buckets['1_30'] += $balance;
+            } elseif ($days <= 60) {
+                $buckets['31_60'] += $balance;
+            } elseif ($days <= 90) {
+                $buckets['61_90'] += $balance;
+            } else {
+                $buckets['90_plus'] += $balance;
+            }
+        }
+
+        return [
+            'buckets' => array_map(fn ($v) => round($v, 2), $buckets),
+            'rows' => $rows->toArray(),
+        ];
+    }
+
+    public function excessPaymentStatements(): array
+    {
+        $saleIds = DB::table('sales')->where('parent_id', $this->parentId())->pluck('id');
+
+        return DB::table('customer_credits as cc')
+            ->leftJoin('customers as c', 'c.id', '=', 'cc.customer_id')
+            ->leftJoin('sales as s', 's.id', '=', 'cc.sale_id')
+            ->whereIn('cc.sale_id', $saleIds)
+            ->select(
+                'cc.id',
+                'cc.customer_id',
+                'c.name as customer_name',
+                'cc.sale_id',
+                's.agreement_no',
+                'cc.amount',
+                'cc.balance',
+                'cc.action',
+                'cc.status',
+                'cc.notes',
+                'cc.created_at'
+            )
+            ->orderByDesc('cc.id')
+            ->get()
+            ->toArray();
+    }
+
+    public function sellerSettlementReport(): array
+    {
+        return DB::table('sellers as s')
+            ->where('s.parent_id', $this->parentId())
+            ->leftJoin('sales as sale', 'sale.seller_id', '=', 's.id')
+            ->selectRaw('s.id, s.name, s.agreed_amount, s.amount_paid, s.amount_remaining, COUNT(sale.id) as linked_sales, SUM(COALESCE(sale.total_contract_value,0)) as linked_sales_value')
+            ->groupBy('s.id', 's.name', 's.agreed_amount', 's.amount_paid', 's.amount_remaining')
+            ->orderByDesc('s.id')
+            ->get()
+            ->toArray();
+    }
+
     private function evaluateCommissionTrigger(int $saleId, string $event): void
     {
-        $sale = DB::table('sales')->where('id', $saleId)->first();
+        $sale = $this->getSaleForParentOrFail($saleId);
         if (!$sale || empty($sale->agent_id)) {
             return;
         }
 
-        $agent = DB::table('agents')->where('id', $sale->agent_id)->first();
+        $agent = DB::table('agents')->where('id', $sale->agent_id)->where('parent_id', $this->parentId())->first();
         if (!$agent) {
             return;
         }
@@ -534,5 +675,15 @@ class UnifiedPmsService
             return (int) parentId();
         }
         return 1;
+    }
+
+    private function getSaleForParentOrFail(int $saleId): object
+    {
+        $sale = DB::table('sales')->where('id', $saleId)->where('parent_id', $this->parentId())->first();
+        if (!$sale) {
+            abort(404, 'Sale not found.');
+        }
+
+        return $sale;
     }
 }

@@ -37,5 +37,31 @@
             @foreach($projectProfit as $p)<tr><td>{{$p->project_name}}</td><td>{{$p->revenue}}</td><td>{{$p->commission}}</td><td>{{$p->gross_profit}}</td></tr>@endforeach
             </tbody></table>
         </div></div></div>
+
+        <div class="col-12"><div class="card"><div class="card-header"><h5>{{__('Rent Roll with Days Past Due')}}</h5></div><div class="card-body table-responsive">
+            <table class="table"><thead><tr><th>{{__('Invoice')}}</th><th>{{__('Tenant')}}</th><th>{{__('Amount')}}</th><th>{{__('Status')}}</th><th>{{__('Due Date')}}</th><th>{{__('Days Past Due')}}</th></tr></thead><tbody>
+            @foreach($rentRoll as $row)<tr><td>{{$row->invoice_id}}</td><td>{{$row->tenant_id}}</td><td>{{$row->amount}}</td><td>{{$row->status}}</td><td>{{$row->end_date}}</td><td>{{$row->days_past_due}}</td></tr>@endforeach
+            </tbody></table>
+        </div></div></div>
+
+        <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Receivables Aging')}}</h5></div><div class="card-body">
+            <p>{{__('Current')}}: <strong>{{$receivableAging['buckets']['current']}}</strong></p>
+            <p>{{__('1-30 Days')}}: <strong>{{$receivableAging['buckets']['1_30']}}</strong></p>
+            <p>{{__('31-60 Days')}}: <strong>{{$receivableAging['buckets']['31_60']}}</strong></p>
+            <p>{{__('61-90 Days')}}: <strong>{{$receivableAging['buckets']['61_90']}}</strong></p>
+            <p>{{__('90+ Days')}}: <strong>{{$receivableAging['buckets']['90_plus']}}</strong></p>
+        </div></div></div>
+
+        <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Excess Payment Statements')}}</h5></div><div class="card-body table-responsive">
+            <table class="table"><thead><tr><th>{{__('Customer')}}</th><th>{{__('Agreement')}}</th><th>{{__('Amount')}}</th><th>{{__('Balance')}}</th><th>{{__('Action')}}</th><th>{{__('Status')}}</th></tr></thead><tbody>
+            @foreach($excessStatements as $s)<tr><td>{{$s->customer_name}}</td><td>{{$s->agreement_no}}</td><td>{{$s->amount}}</td><td>{{$s->balance}}</td><td>{{$s->action}}</td><td>{{$s->status}}</td></tr>@endforeach
+            </tbody></table>
+        </div></div></div>
+
+        <div class="col-12"><div class="card"><div class="card-header"><h5>{{__('Seller Settlement')}}</h5></div><div class="card-body table-responsive">
+            <table class="table"><thead><tr><th>{{__('Seller')}}</th><th>{{__('Agreed')}}</th><th>{{__('Paid')}}</th><th>{{__('Remaining')}}</th><th>{{__('Linked Sales')}}</th><th>{{__('Linked Sales Value')}}</th></tr></thead><tbody>
+            @foreach($sellerSettlement as $s)<tr><td>{{$s->name}}</td><td>{{$s->agreed_amount}}</td><td>{{$s->amount_paid}}</td><td>{{$s->amount_remaining}}</td><td>{{$s->linked_sales}}</td><td>{{$s->linked_sales_value}}</td></tr>@endforeach
+            </tbody></table>
+        </div></div></div>
     </div>
 @endsection

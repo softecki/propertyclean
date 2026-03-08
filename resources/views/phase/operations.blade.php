@@ -60,11 +60,20 @@
                 <tr>
                     <td>{{$bill->bill_type}}</td><td>{{$bill->amount}} {{$bill->currency_code}}</td><td>{{$bill->due_date}}</td><td>{{$bill->status}}</td>
                     <td>
+                        <form method="post" action="{{route('phase.utility-bills.update',$bill->id)}}" class="mb-1">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="bill_type" value="{{$bill->bill_type}}" required>
+                            <input class="form-control form-control-sm mb-1" type="number" step="0.01" name="amount" value="{{$bill->amount}}" required>
+                            <input class="form-control form-control-sm mb-1" name="currency_code" value="{{$bill->currency_code}}" required>
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
                         @if($bill->status !== 'paid')
                             <form method="post" action="{{route('phase.utility-bills.paid',$bill->id)}}">@csrf
                                 <button class="btn btn-sm btn-success">{{__('Mark Paid')}}</button>
                             </form>
                         @endif
+                        <form method="post" action="{{route('phase.utility-bills.destroy',$bill->id)}}" class="mt-1">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
@@ -72,13 +81,27 @@
         </div></div></div>
 
         <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Maintenance Schedule')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Service')}}</th><th>{{__('Last')}}</th><th>{{__('Next')}}</th><th>{{__('Status')}}</th></tr></thead><tbody>
-            @foreach($maintenanceSchedules as $m)<tr><td>{{$m->service_type}}</td><td>{{$m->last_maintenance_date}}</td><td>{{$m->next_maintenance_date}}</td><td>{{$m->status}}</td></tr>@endforeach
+            <table class="table"><thead><tr><th>{{__('Service')}}</th><th>{{__('Last')}}</th><th>{{__('Next')}}</th><th>{{__('Status')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
+            @foreach($maintenanceSchedules as $m)
+                <tr>
+                    <td>{{$m->service_type}}</td><td>{{$m->last_maintenance_date}}</td><td>{{$m->next_maintenance_date}}</td><td>{{$m->status}}</td>
+                    <td>
+                        <form method="post" action="{{route('phase.maintenance-schedules.update',$m->id)}}" class="d-inline">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="service_type" value="{{$m->service_type}}" required>
+                            <input class="form-control form-control-sm mb-1" type="date" name="next_maintenance_date" value="{{$m->next_maintenance_date}}" required>
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
+                        <form method="post" action="{{route('phase.maintenance-schedules.destroy',$m->id)}}" class="d-inline">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
             </tbody></table>
         </div></div></div>
 
         <div class="col-md-6"><div class="card"><div class="card-header"><h5>{{__('Asset Register')}}</h5></div><div class="card-body table-responsive">
-            <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Cost')}}</th><th>{{__('Book Value')}}</th><th>{{__('Depreciation')}}</th></tr></thead><tbody>
+            <table class="table"><thead><tr><th>{{__('Name')}}</th><th>{{__('Cost')}}</th><th>{{__('Book Value')}}</th><th>{{__('Depreciation')}}</th><th>{{__('Actions')}}</th></tr></thead><tbody>
             @foreach($assets as $asset)
                 <tr>
                     <td>{{$asset->name}}</td><td>{{$asset->cost}}</td><td>{{$asset->book_value}}</td>
@@ -89,6 +112,17 @@
                                 <input class="form-control form-control-sm ms-1" type="date" name="period_end" required>
                                 <button class="btn btn-sm btn-warning ms-1">{{__('Post')}}</button>
                             </div>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" action="{{route('phase.assets.update',$asset->id)}}" class="d-inline">@csrf @method('PUT')
+                            <input class="form-control form-control-sm mb-1" name="name" value="{{$asset->name}}" required>
+                            <input class="form-control form-control-sm mb-1" type="number" step="0.01" name="cost" value="{{$asset->cost}}" required>
+                            <input class="form-control form-control-sm mb-1" type="number" name="useful_life_years" value="{{$asset->useful_life_years}}" required>
+                            <button class="btn btn-sm btn-primary">{{__('Update')}}</button>
+                        </form>
+                        <form method="post" action="{{route('phase.assets.destroy',$asset->id)}}" class="d-inline">@csrf @method('DELETE')
+                            <button class="btn btn-sm btn-danger">{{__('Delete')}}</button>
                         </form>
                     </td>
                 </tr>
