@@ -260,6 +260,60 @@
             @endif
             @endif
 
+            @if(\Auth::check())
+                <li class="cdxmenu-title">
+                    <h5>{{__('Phase Modules')}}</h5>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.dashboard'])?'active':''}}">
+                    <a href="{{route('phase.dashboard')}}">
+                        <div class="icon-item"><i data-feather="grid"></i></div>
+                        <span>{{__('Phase Dashboard')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.land'])?'active':''}}">
+                    <a href="{{route('phase.land')}}">
+                        <div class="icon-item"><i data-feather="map"></i></div>
+                        <span>{{__('Land Master')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.parties'])?'active':''}}">
+                    <a href="{{route('phase.parties')}}">
+                        <div class="icon-item"><i data-feather="users"></i></div>
+                        <span>{{__('Parties (Buyer/Seller/Agent)')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.sales'])?'active':''}}">
+                    <a href="{{route('phase.sales')}}">
+                        <div class="icon-item"><i data-feather="shopping-cart"></i></div>
+                        <span>{{__('Sales & Collections')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.finance'])?'active':''}}">
+                    <a href="{{route('phase.finance')}}">
+                        <div class="icon-item"><i data-feather="dollar-sign"></i></div>
+                        <span>{{__('Finance & Accrual')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.operations'])?'active':''}}">
+                    <a href="{{route('phase.operations')}}">
+                        <div class="icon-item"><i data-feather="tool"></i></div>
+                        <span>{{__('Operations & Assets')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.communications','phase.threads.show'])?'active':''}}">
+                    <a href="{{route('phase.communications')}}">
+                        <div class="icon-item"><i data-feather="mail"></i></div>
+                        <span>{{__('Portal & Communications')}}</span>
+                    </a>
+                </li>
+                <li class="menu-item {{in_array($routeName,['phase.reports'])?'active':''}}">
+                    <a href="{{route('phase.reports')}}">
+                        <div class="icon-item"><i data-feather="bar-chart-2"></i></div>
+                        <span>{{__('Phase Reports')}}</span>
+                    </a>
+                </li>
+            @endif
+
             @if(Gate::check('manage types'))
                 <li class="cdxmenu-title">
                     <h5>{{__('Setup')}}</h5>

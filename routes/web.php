@@ -17,6 +17,7 @@ use App\Http\Controllers\TypeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MaintainerController;
+use App\Http\Controllers\UnifiedPmsWebController;
 use App\Http\Controllers\MaintenanceRequestController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoicePaymentController;
@@ -83,6 +84,60 @@ Route::group(
     Route::resource('coupons', CouponController::class);
     Route::get('subscription/transaction', [SubscriptionController::class,'transaction'])->name('subscription.transaction');
 }
+);
+
+//-------------------------------Unified PMS Phase Modules (Web UI)-------------------------------------------
+Route::group(
+    [
+        'middleware' => [
+            'auth',
+            'XSS',
+        ],
+        'prefix' => 'phase',
+        'as' => 'phase.',
+    ],
+    function () {
+        Route::get('/', [UnifiedPmsWebController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/land', [UnifiedPmsWebController::class, 'land'])->name('land');
+        Route::post('/branches', [UnifiedPmsWebController::class, 'storeBranch'])->name('branches.store');
+        Route::post('/projects', [UnifiedPmsWebController::class, 'storeProject'])->name('projects.store');
+        Route::post('/blocks', [UnifiedPmsWebController::class, 'storeBlock'])->name('blocks.store');
+        Route::post('/plots', [UnifiedPmsWebController::class, 'storePlot'])->name('plots.store');
+
+        Route::get('/parties', [UnifiedPmsWebController::class, 'parties'])->name('parties');
+        Route::post('/customers', [UnifiedPmsWebController::class, 'storeCustomer'])->name('customers.store');
+        Route::post('/sellers', [UnifiedPmsWebController::class, 'storeSeller'])->name('sellers.store');
+        Route::post('/agents', [UnifiedPmsWebController::class, 'storeAgent'])->name('agents.store');
+
+        Route::get('/sales', [UnifiedPmsWebController::class, 'sales'])->name('sales');
+        Route::post('/sales', [UnifiedPmsWebController::class, 'storeSale'])->name('sales.store');
+        Route::post('/sales/{saleId}/charges', [UnifiedPmsWebController::class, 'addSaleCharge'])->name('sales.charges.store');
+        Route::post('/sales/{saleId}/payments', [UnifiedPmsWebController::class, 'addSalePayment'])->name('sales.payments.store');
+        Route::post('/sales/{saleId}/status', [UnifiedPmsWebController::class, 'updateSaleStatus'])->name('sales.status.update');
+
+        Route::get('/finance', [UnifiedPmsWebController::class, 'finance'])->name('finance');
+        Route::post('/control-numbers', [UnifiedPmsWebController::class, 'storeControlNumber'])->name('control-numbers.store');
+        Route::post('/currency-rates', [UnifiedPmsWebController::class, 'storeCurrencyRate'])->name('currency-rates.store');
+        Route::post('/commissions/{commissionId}/pay', [UnifiedPmsWebController::class, 'payCommission'])->name('commissions.pay');
+
+        Route::get('/operations', [UnifiedPmsWebController::class, 'operations'])->name('operations');
+        Route::post('/utility-bills', [UnifiedPmsWebController::class, 'storeUtilityBill'])->name('utility-bills.store');
+        Route::post('/utility-bills/{billId}/paid', [UnifiedPmsWebController::class, 'markUtilityBillPaid'])->name('utility-bills.paid');
+        Route::post('/maintenance-schedules', [UnifiedPmsWebController::class, 'storeMaintenanceSchedule'])->name('maintenance-schedules.store');
+        Route::post('/assets', [UnifiedPmsWebController::class, 'storeAsset'])->name('assets.store');
+        Route::post('/assets/{assetId}/depreciate', [UnifiedPmsWebController::class, 'depreciateAsset'])->name('assets.depreciate');
+
+        Route::get('/communications', [UnifiedPmsWebController::class, 'communications'])->name('communications');
+        Route::get('/communications/threads/{threadId}', [UnifiedPmsWebController::class, 'showThread'])->name('threads.show');
+        Route::post('/communications/threads', [UnifiedPmsWebController::class, 'storeThread'])->name('threads.store');
+        Route::post('/communications/threads/{threadId}/messages', [UnifiedPmsWebController::class, 'storeThreadMessage'])->name('threads.messages.store');
+        Route::post('/communications/feedback', [UnifiedPmsWebController::class, 'storeFeedback'])->name('feedback.store');
+        Route::post('/communications/notifications', [UnifiedPmsWebController::class, 'storeNotification'])->name('notifications.store');
+        Route::post('/communications/reminders', [UnifiedPmsWebController::class, 'generateReminders'])->name('reminders.generate');
+
+        Route::get('/reports', [UnifiedPmsWebController::class, 'reports'])->name('reports');
+    }
 );
 
 //-------------------------------Subscription Payment-------------------------------------------
